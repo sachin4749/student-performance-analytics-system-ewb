@@ -24,9 +24,3 @@ This system automates end-to-end data ingestion, missing-value imputation, vecto
 2. **Vectorized Computation (`compute_analytics`):** Leverages NumPy arrays to compute total scores, percentages, and evaluates pass/fail criteria and grade assignments.
 3. **Interactive Dashboard (`display_dashboard`):** Provides a clean, menu-driven CLI interface allowing users to view overall summaries, subject breakdowns, department statistics, top performers, and student searches.
 4. **Data Export (`processed_student_report.csv`):** Enables seamless export of calculated results back to CSV format.
-
-## 6. GitHub Checklist & Submission Workflow
-* [x] Public GitHub repository created and structured properly.
-* [x] `main.py`, `students.csv`, and `README.md` uploaded.
-* [x] Project tested locally and executes without errors.
-* [x] Repository URL ready for Google Form submission on or before 15 October 2026.
