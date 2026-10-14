@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import os
 import io
 
 import analytics
@@ -23,6 +24,25 @@ if "report" not in st.session_state:
 if "data_source" not in st.session_state:
     st.session_state.data_source = None
 
+# Ensure sample_data directory exists and has fallback sample if missing
+os.makedirs("sample_data", exist_ok=True)
+sample_csv_path = "sample_data/students.csv"
+
+if not os.path.exists(sample_csv_path):
+    # Create default sample csv if missing
+    default_sample_df = pd.DataFrame({
+        'Student ID': ['S101', 'S102', 'S103', 'S104', 'S105'],
+        'Name': ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Iyer', 'Kabir Singh'],
+        'Department': ['CSE', 'ECE', 'CSE', 'IT', 'MECH'],
+        'Python': [88, 76, 45, 92, 55],
+        'SQL': [92, 68, 40, 95, 60],
+        'C++': [85, 72, 48, 94, 52],
+        'OOP': [90, 74, 50, 96, 58],
+        'IOT': [86, 70, 42, 91, 54],
+        'Attendance': [95.0, 82.5, 58.0, 98.0, 75.0]
+    })
+    default_sample_df.to_csv(sample_csv_path, index=False)
+
 # Sidebar Navigation & Upload
 st.sidebar.title("🎓 Performance Analytics")
 st.sidebar.markdown("*BTech Student Performance Dashboard*")
@@ -34,11 +54,23 @@ upload_option = st.sidebar.radio(
     ("Upload CSV File", "Use Sample Dataset")
 )
 
-sample_csv_path = "sample_data/students.csv"
-
 def load_default_sample():
     try:
-        df_sample = pd.read_csv(sample_csv_path)
+        if os.path.exists(sample_csv_path):
+            df_sample = pd.read_csv(sample_csv_path)
+        else:
+            # Fallback inline data if file is somehow missing
+            df_sample = pd.DataFrame({
+                'Student ID': ['S101', 'S102', 'S103', 'S104', 'S105'],
+                'Name': ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Iyer', 'Kabir Singh'],
+                'Department': ['CSE', 'ECE', 'CSE', 'IT', 'MECH'],
+                'Python': [88, 76, 45, 92, 55],
+                'SQL': [92, 68, 40, 95, 60],
+                'C++': [85, 72, 48, 94, 52],
+                'OOP': [90, 74, 50, 96, 58],
+                'IOT': [86, 70, 42, 91, 54],
+                'Attendance': [95.0, 82.5, 58.0, 98.0, 75.0]
+            })
         processed, rep = analytics.clean_and_process_data(df_sample)
         st.session_state.processed_df = processed
         st.session_state.report = rep
