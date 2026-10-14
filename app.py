@@ -23,7 +23,6 @@ if "data_source" not in st.session_state:
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
-# Generate comprehensive multi-semester sample dataset
 np.random.seed(42)
 departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
 semesters = [f"Sem {i}" for i in range(1, 9)]
@@ -35,7 +34,7 @@ rows = []
 sid_counter = 101
 for dept in departments:
     for sem in semesters:
-        for _ in range(15):  # 15 students per branch per semester = 120 per dept, total 600 records across 8 sems
+        for _ in range(15):
             sid = f"S{sid_counter}"
             sid_counter += 1
             name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
@@ -115,7 +114,7 @@ report = st.session_state.report
 if df is None:
     st.title("🎓 Performance Analytics System")
     st.markdown("### BTech Multi-Semester Academic Analytics Dashboard")
-    st.markdown("Welcome! Please load the built-in multi-semester sample dataset (covering Semesters 1 to 8 across all engineering branches) or upload your CSV file.")
+    st.markdown("Welcome! Please load the built-in multi-semester sample dataset or upload your CSV file.")
     if st.button("🚀 Load Sample Dataset Now", type="primary"):
         load_default_sample()
         st.rerun()
@@ -223,10 +222,33 @@ else:
             )
 
     elif page == "🏆 Top 5 Students":
-        st.subheader("Top Performing Students Across Semesters")
-        top_5 = analytics.get_top_students(df, 5)
-        display_cols = ['Student ID', 'Name', 'Department', 'Semester', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Average Marks', 'Grade', 'Status']
-        st.dataframe(top_5[display_cols].reset_index(drop=True), use_container_width=True)
+        st.subheader("🏆 Top Performing Students")
+        st.markdown("Filter top performers by Department and Semester.")
+        
+        c_top1, c_top2 = st.columns(2)
+        top_dept = c_top1.selectbox("Filter by Department:", ["All Departments"] + sorted(df['Department'].unique().tolist()), key="top_dept")
+        top_sem = c_top2.selectbox("Filter by Semester:", ["All Semesters"] + [f"Sem {i}" for i in range(1, 9)], key="top_sem")
+        
+        filtered_top_df = df.copy()
+        if top_dept != "All Departments":
+            filtered_top_df = filtered_top_df[filtered_top_df['Department'] == top_dept]
+        if top_sem != "All Semesters":
+            filtered_top_df = filtered_top_df[filtered_top_df['Semester'] == top_sem]
+            
+        top_5 = analytics.get_top_students(filtered_top_df, 5)
+        
+        if top_5.empty:
+            st.warning("No student records found for the selected filters.")
+        else:
+            display_cols = ['Student ID', 'Name', 'Department', 'Semester', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Average Marks', 'Grade', 'Status']
+            st.dataframe(top_5[display_cols].reset_index(drop=True), use_container_width=True)
+            
+            fig_top = px.bar(
+                top_5, x='Name', y='Average Marks', color='Department', text='Average Marks',
+                title=f"Top Students ({top_dept} | {top_sem})"
+            )
+            fig_top.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_top, use_container_width=True)
 
     elif page == "🔍 Student Search":
         st.subheader("Student Search Explorer")
