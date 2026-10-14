@@ -24,23 +24,42 @@ if "report" not in st.session_state:
 if "data_source" not in st.session_state:
     st.session_state.data_source = None
 
-# Ensure sample_data directory exists and has fallback sample if missing
+# Ensure sample_data directory exists and has 50 sample students if missing
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
 if not os.path.exists(sample_csv_path):
-    # Create default sample csv if missing
-    default_sample_df = pd.DataFrame({
-        'Student ID': ['S101', 'S102', 'S103', 'S104', 'S105'],
-        'Name': ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Iyer', 'Kabir Singh'],
-        'Department': ['CSE', 'ECE', 'CSE', 'IT', 'MECH'],
-        'Python': [88, 76, 45, 92, 55],
-        'SQL': [92, 68, 40, 95, 60],
-        'C++': [85, 72, 48, 94, 52],
-        'OOP': [90, 74, 50, 96, 58],
-        'IOT': [86, 70, 42, 91, 54],
-        'Attendance': [95.0, 82.5, 58.0, 98.0, 75.0]
-    })
+    # 50 comprehensive sample records
+    np.random.seed(42)
+    sample_data_dict = {
+        'Student ID': [f"S{101+i}" for i in range(50)],
+        'Name': [
+            "Aarav Sharma", "Diya Patel", "Rohan Verma", "Ananya Iyer", "Kabir Singh",
+            "Neha Gupta", "Vikram Malhotra", "Pooja Nair", "Aditya Joshi", "Sneha Rao",
+            "Rahul Kulkarni", "Priya Deshmukh", "Amit Patil", "Kavya Reddy", "Siddharth Choudhury",
+            "Meera Mehta", "Kiran Shah", "Divya Bose", "Arjun Das", "Ankita Menon",
+            "Varun Pillai", "Shruti Shetty", "Manish Nambiar", "Tanvi Verghese", "Nikhil Ranganathan",
+            "Akshay Desai", "Pallavi Jadhav", "Karthik Shinde", "Swathi More", "Deepak Sharma",
+            "Pranav Patel", "Ritu Verma", "Vishal Iyer", "Nisha Singh", "Sanjay Gupta",
+            "Geeta Malhotra", "Abhishek Nair", "Komal Joshi", "Harsh Rao", "Poonam Kulkarni",
+            "Tarun Deshmukh", "Bhavna Patil", "Sachin Reddy", "Meghana Choudhury", "Akash Mehta",
+            "Rachana Shah", "Naveen Bose", "Jyoti Das", "Yash Menon", "Monika Pillai"
+        ],
+        'Department': [
+            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
+            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
+            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
+            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
+            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML"
+        ],
+        'Python': np.random.randint(40, 99, size=50),
+        'SQL': np.random.randint(38, 98, size=50),
+        'C++': np.random.randint(35, 96, size=50),
+        'OOP': np.random.randint(40, 99, size=50),
+        'IOT': np.random.randint(35, 97, size=50),
+        'Attendance': np.round(np.random.uniform(55.0, 100.0, size=50), 1)
+    }
+    default_sample_df = pd.DataFrame(sample_data_dict)
     default_sample_df.to_csv(sample_csv_path, index=False)
 
 # Sidebar Navigation & Upload
@@ -51,7 +70,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📁 Data Management")
 upload_option = st.sidebar.radio(
     "Choose Data Source:",
-    ("Upload CSV File", "Use Sample Dataset")
+    ("Upload CSV File", "Use Sample Dataset (50 Students)")
 )
 
 def load_default_sample():
@@ -59,27 +78,16 @@ def load_default_sample():
         if os.path.exists(sample_csv_path):
             df_sample = pd.read_csv(sample_csv_path)
         else:
-            # Fallback inline data if file is somehow missing
-            df_sample = pd.DataFrame({
-                'Student ID': ['S101', 'S102', 'S103', 'S104', 'S105'],
-                'Name': ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Iyer', 'Kabir Singh'],
-                'Department': ['CSE', 'ECE', 'CSE', 'IT', 'MECH'],
-                'Python': [88, 76, 45, 92, 55],
-                'SQL': [92, 68, 40, 95, 60],
-                'C++': [85, 72, 48, 94, 52],
-                'OOP': [90, 74, 50, 96, 58],
-                'IOT': [86, 70, 42, 91, 54],
-                'Attendance': [95.0, 82.5, 58.0, 98.0, 75.0]
-            })
+            df_sample = pd.read_csv("sample_data/students.csv")
         processed, rep = analytics.clean_and_process_data(df_sample)
         st.session_state.processed_df = processed
         st.session_state.report = rep
-        st.session_state.data_source = "Sample Dataset"
-        st.sidebar.success("Sample dataset loaded successfully!")
+        st.session_state.data_source = "Sample Dataset (50 Students)"
+        st.sidebar.success("Loaded 50 sample students successfully!")
     except Exception as e:
         st.sidebar.error(f"Error loading sample dataset: {e}")
 
-if upload_option == "Use Sample Dataset":
+if upload_option == "Use Sample Dataset (50 Students)":
     if st.sidebar.button("Load Sample Data"):
         load_default_sample()
 else:
@@ -132,14 +140,14 @@ if df is None:
     # Welcome Screen
     st.title("🎓 Performance Analytics System")
     st.markdown("### BTech Student Performance Analytics Dashboard")
-    st.markdown("Welcome! Please upload a student CSV dataset using the sidebar or load the built-in sample dataset to begin analyzing student academic records, subject distributions, departmental performance, and individual student profiles.")
+    st.markdown("Welcome! Please upload a student CSV dataset using the sidebar or load the built-in 50-student sample dataset to begin analyzing academic records, subject distributions, departmental performance, and individual student profiles.")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.info("💡 **Getting Started**\n1. Select **Use Sample Dataset** or upload your own CSV file in the sidebar.\n2. Explore interactive metrics, charts, department summaries, and top performer rankings.\n3. Search for individual records and export processed reports.")
+        st.info("💡 **Getting Started**\n1. Select **Use Sample Dataset (50 Students)** or upload your own CSV file in the sidebar.\n2. Explore interactive metrics, charts, department summaries, and top performer rankings.\n3. Search for individual records and export processed reports.")
     with col2:
         st.warning("📋 **Required CSV Columns**\n`Student ID`, `Name`, `Department`, `Python`, `SQL`, `C++`, `OOP`, `IOT`, `Attendance`")
-        if st.button("🚀 Load Sample Dataset Now", type="primary"):
+        if st.button("🚀 Load 50 Sample Students Now", type="primary"):
             load_default_sample()
             st.rerun()
             
