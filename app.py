@@ -23,31 +23,32 @@ if "data_source" not in st.session_state:
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
-if not os.path.exists(sample_csv_path):
-    np.random.seed(42)
-    departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
-    first_names = ["Aarav", "Diya", "Rohan", "Ananya", "Kabir", "Neha", "Vikram", "Pooja", "Aditya", "Sneha", 
-                   "Rahul", "Priya", "Amit", "Kavya", "Siddharth", "Meera", "Kiran", "Divya", "Arjun", "Ankita",
-                   "Varun", "Shruti", "Manish", "Tanvi", "Nikhil", "Akshay", "Pallavi", "Karthik", "Swathi", "Deepak"]
-    last_names = ["Sharma", "Patel", "Verma", "Iyer", "Singh", "Gupta", "Malhotra", "Nair", "Joshi", "Rao",
-                  "Kulkarni", "Deshmukh", "Patil", "Reddy", "Choudhury", "Mehta", "Shah", "Bose", "Das", "Menon"]
-    rows = []
-    sid_counter = 101
-    for dept in departments:
-        for _ in range(45):
-            sid = f"S{sid_counter}"
-            sid_counter += 1
-            name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
-            rows.append({
-                'Student ID': sid, 'Name': name, 'Department': dept,
-                'Subject 1': int(np.random.randint(40, 99)),
-                'Subject 2': int(np.random.randint(38, 98)),
-                'Subject 3': int(np.random.randint(35, 96)),
-                'Subject 4': int(np.random.randint(40, 99)),
-                'Subject 5': int(np.random.randint(35, 97)),
-                'Attendance': round(float(np.random.uniform(55.0, 100.0)), 1)
-            })
-    pd.DataFrame(rows).to_csv(sample_csv_path, index=False)
+# Always ensure sample csv matches the required universal columns schema
+np.random.seed(42)
+departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
+first_names = ["Aarav", "Diya", "Rohan", "Ananya", "Kabir", "Neha", "Vikram", "Pooja", "Aditya", "Sneha", 
+               "Rahul", "Priya", "Amit", "Kavya", "Siddharth", "Meera", "Kiran", "Divya", "Arjun", "Ankita",
+               "Varun", "Shruti", "Manish", "Tanvi", "Nikhil", "Akshay", "Pallavi", "Karthik", "Swathi", "Deepak"]
+last_names = ["Sharma", "Patel", "Verma", "Iyer", "Singh", "Gupta", "Malhotra", "Nair", "Joshi", "Rao",
+              "Kulkarni", "Deshmukh", "Patil", "Reddy", "Choudhury", "Mehta", "Shah", "Bose", "Das", "Menon"]
+
+rows = []
+sid_counter = 101
+for dept in departments:
+    for _ in range(45):
+        sid = f"S{sid_counter}"
+        sid_counter += 1
+        name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
+        rows.append({
+            'Student ID': sid, 'Name': name, 'Department': dept,
+            'Subject 1': int(np.random.randint(40, 99)),
+            'Subject 2': int(np.random.randint(38, 98)),
+            'Subject 3': int(np.random.randint(35, 96)),
+            'Subject 4': int(np.random.randint(40, 99)),
+            'Subject 5': int(np.random.randint(35, 97)),
+            'Attendance': round(float(np.random.uniform(55.0, 100.0)), 1)
+        })
+pd.DataFrame(rows).to_csv(sample_csv_path, index=False)
 
 st.sidebar.title("🎓 Performance Analytics")
 st.sidebar.markdown("*BTech Student Performance Dashboard*")
