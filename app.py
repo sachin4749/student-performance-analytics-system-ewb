@@ -23,7 +23,6 @@ if "data_source" not in st.session_state:
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
-# Always ensure sample csv matches the required universal columns schema
 np.random.seed(42)
 departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
 first_names = ["Aarav", "Diya", "Rohan", "Ananya", "Kabir", "Neha", "Vikram", "Pooja", "Aditya", "Sneha", 
@@ -149,11 +148,59 @@ else:
             st.plotly_chart(fig_status, use_container_width=True)
 
     elif page == "📊 Subject-Wise Performance":
-        st.subheader("Subject-Wise Academic Performance")
-        st.markdown("Averages across universal evaluation columns (Subject 1 to 5).")
-        subjects = analytics.SUBJECTS
-        subj_stats = [{"Subject": s, "Average": round(df[s].mean(), 2), "Highest": df[s].max(), "Lowest": df[s].min()} for s in subjects if s in df.columns]
-        st.dataframe(pd.DataFrame(subj_stats), use_container_width=True)
+        st.subheader("📊 Subject-Wise Academic Performance")
+        st.markdown("Analyze curriculum performance across different engineering branches with their relative subjects.")
+        
+        all_depts = sorted(df['Department'].unique().tolist())
+        selected_subj_dept = st.selectbox("Select Department to View Subject Performance:", all_depts, key="subj_dept_select")
+        
+        dept_subj_names = analytics.get_department_subjects(selected_subj_dept)
+        dept_subset = df[df['Department'] == selected_subj_dept]
+        
+        subj_stats = []
+        for i, subj_title in enumerate(dept_subj_names, 1):
+            col_name = f"Subject {i}"
+            if col_name in dept_subset.columns:
+                subj_data = dept_subset[col_name]
+                subj_stats.append({
+                    "Subject Name": subj_title,
+                    "Average Marks": round(subj_data.mean(), 2),
+                    "Highest Mark": int(subj_data.max()),
+                    "Lowest Mark": int(subj_data.min()),
+                    "Median Mark": round(subj_data.median(), 2)
+                })
+        
+        df_subj_stats = pd.DataFrame(subj_stats)
+        st.markdown(f"### {selected_subj_dept} Department Subject Statistics")
+        st.dataframe(df_subj_stats.style.highlight_max(subset=['Average Marks', 'Highest Mark'], color='lightgreen'), use_container_width=True)
+        
+        st.markdown("---")
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            st.markdown(f"#### {selected_subj_dept} - Comparative Subject Averages")
+            fig_subj_avg = px.bar(
+                df_subj_stats, x='Subject Name', y='Average Marks',
+                color='Subject Name', text='Average Marks',
+                title=f"Average Marks in {selected_subj_dept}"
+            )
+            fig_subj_avg.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_subj_avg, use_container_width=True)
+            
+        with col_s2:
+            st.markdown(f"#### {selected_subj_dept} - Subject Spread (Box Plot)")
+            box_records = []
+            for i, subj_title in enumerate(dept_subj_names, 1):
+                col_name = f"Subject {i}"
+                if col_name in dept_subset.columns:
+                    for val in dept_subset[col_name]:
+                        box_records.append({"Subject": subj_title, "Marks": val})
+            df_box = pd.DataFrame(box_records)
+            fig_box = px.box(
+                df_box, x='Subject', y='Marks', color='Subject',
+                title=f"Marks Distribution in {selected_subj_dept}"
+            )
+            fig_box.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_box, use_container_width=True)
 
     elif page == "🏢 Department Analytics":
         st.subheader("Department-Wise Summary")
