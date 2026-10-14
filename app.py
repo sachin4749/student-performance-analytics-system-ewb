@@ -6,7 +6,6 @@ import os
 
 import analytics
 
-# Page Configuration
 st.set_page_config(
     page_title="Performance Analytics System",
     page_icon="🎓",
@@ -21,41 +20,34 @@ if "report" not in st.session_state:
 if "data_source" not in st.session_state:
     st.session_state.data_source = None
 
-# Ensure sample_data directory exists and has 50 sample students if missing
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
 if not os.path.exists(sample_csv_path):
     np.random.seed(42)
-    sample_data_dict = {
-        'Student ID': [f"S{101+i}" for i in range(50)],
-        'Name': [
-            "Aarav Sharma", "Diya Patel", "Rohan Verma", "Ananya Iyer", "Kabir Singh",
-            "Neha Gupta", "Vikram Malhotra", "Pooja Nair", "Aditya Joshi", "Sneha Rao",
-            "Rahul Kulkarni", "Priya Deshmukh", "Amit Patil", "Kavya Reddy", "Siddharth Choudhury",
-            "Meera Mehta", "Kiran Shah", "Divya Bose", "Arjun Das", "Ankita Menon",
-            "Varun Pillai", "Shruti Shetty", "Manish Nambiar", "Tanvi Verghese", "Nikhil Ranganathan",
-            "Akshay Desai", "Pallavi Jadhav", "Karthik Shinde", "Swathi More", "Deepak Sharma",
-            "Pranav Patel", "Ritu Verma", "Vishal Iyer", "Nisha Singh", "Sanjay Gupta",
-            "Geeta Malhotra", "Abhishek Nair", "Komal Joshi", "Harsh Rao", "Poonam Kulkarni",
-            "Tarun Deshmukh", "Bhavna Patil", "Sachin Reddy", "Meghana Choudhury", "Akash Mehta",
-            "Rachana Shah", "Naveen Bose", "Jyoti Das", "Yash Menon", "Monika Pillai"
-        ],
-        'Department': [
-            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
-            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
-            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
-            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML",
-            "CSE", "ECE", "IT", "MECH", "AI/ML", "CSE", "ECE", "IT", "MECH", "AI/ML"
-        ],
-        'Python': np.random.randint(40, 99, size=50),
-        'SQL': np.random.randint(38, 98, size=50),
-        'C++': np.random.randint(35, 96, size=50),
-        'OOP': np.random.randint(40, 99, size=50),
-        'IOT': np.random.randint(35, 97, size=50),
-        'Attendance': np.round(np.random.uniform(55.0, 100.0, size=50), 1)
-    }
-    pd.DataFrame(sample_data_dict).to_csv(sample_csv_path, index=False)
+    departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
+    first_names = ["Aarav", "Diya", "Rohan", "Ananya", "Kabir", "Neha", "Vikram", "Pooja", "Aditya", "Sneha", 
+                   "Rahul", "Priya", "Amit", "Kavya", "Siddharth", "Meera", "Kiran", "Divya", "Arjun", "Ankita",
+                   "Varun", "Shruti", "Manish", "Tanvi", "Nikhil", "Akshay", "Pallavi", "Karthik", "Swathi", "Deepak"]
+    last_names = ["Sharma", "Patel", "Verma", "Iyer", "Singh", "Gupta", "Malhotra", "Nair", "Joshi", "Rao",
+                  "Kulkarni", "Deshmukh", "Patil", "Reddy", "Choudhury", "Mehta", "Shah", "Bose", "Das", "Menon"]
+    rows = []
+    sid_counter = 101
+    for dept in departments:
+        for _ in range(45):
+            sid = f"S{sid_counter}"
+            sid_counter += 1
+            name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
+            rows.append({
+                'Student ID': sid, 'Name': name, 'Department': dept,
+                'Subject 1': int(np.random.randint(40, 99)),
+                'Subject 2': int(np.random.randint(38, 98)),
+                'Subject 3': int(np.random.randint(35, 96)),
+                'Subject 4': int(np.random.randint(40, 99)),
+                'Subject 5': int(np.random.randint(35, 97)),
+                'Attendance': round(float(np.random.uniform(55.0, 100.0)), 1)
+            })
+    pd.DataFrame(rows).to_csv(sample_csv_path, index=False)
 
 st.sidebar.title("🎓 Performance Analytics")
 st.sidebar.markdown("*BTech Student Performance Dashboard*")
@@ -64,7 +56,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📁 Data Management")
 upload_option = st.sidebar.radio(
     "Choose Data Source:",
-    ("Upload CSV File", "Use Sample Dataset (50 Students)")
+    ("Upload CSV File", "Use Sample Dataset (225 Students / 45 per Dept)")
 )
 
 def load_default_sample():
@@ -73,12 +65,12 @@ def load_default_sample():
         processed, rep = analytics.clean_and_process_data(df_sample)
         st.session_state.processed_df = processed
         st.session_state.report = rep
-        st.session_state.data_source = "Sample Dataset (50 Students)"
-        st.sidebar.success("Loaded 50 sample students successfully!")
+        st.session_state.data_source = "Sample Dataset (225 Students)"
+        st.sidebar.success("Loaded 225 sample students successfully!")
     except Exception as e:
         st.sidebar.error(f"Error loading sample dataset: {e}")
 
-if upload_option == "Use Sample Dataset (50 Students)":
+if upload_option == "Use Sample Dataset (225 Students / 45 per Dept)":
     if st.sidebar.button("Load Sample Data"):
         load_default_sample()
 else:
@@ -122,8 +114,8 @@ report = st.session_state.report
 if df is None:
     st.title("🎓 Performance Analytics System")
     st.markdown("### BTech Student Performance Analytics Dashboard")
-    st.markdown("Welcome! Please load the built-in 50-student sample dataset or upload your CSV file to view all student records, department directories, and download PDF reports.")
-    if st.button("🚀 Load 50 Sample Students Now", type="primary"):
+    st.markdown("Welcome! Please load the built-in 225-student sample dataset (45 students across CSE, ECE, IT, MECH, and AI/ML with department-specific subjects) or upload your CSV file.")
+    if st.button("🚀 Load 225 Sample Students Now", type="primary"):
         load_default_sample()
         st.rerun()
 else:
@@ -157,6 +149,7 @@ else:
 
     elif page == "📊 Subject-Wise Performance":
         st.subheader("Subject-Wise Academic Performance")
+        st.markdown("Averages across universal evaluation columns (Subject 1 to 5).")
         subjects = analytics.SUBJECTS
         subj_stats = [{"Subject": s, "Average": round(df[s].mean(), 2), "Highest": df[s].max(), "Lowest": df[s].min()} for s in subjects if s in df.columns]
         st.dataframe(pd.DataFrame(subj_stats), use_container_width=True)
@@ -174,16 +167,19 @@ else:
 
     elif page == "📂 Department Student Directory":
         st.subheader("Department Student Directory & PDF Reports")
-        st.markdown("View all students sorted by their departments, check their Student IDs and names, and download official department PDF reports.")
-        
         departments = sorted(df['Department'].unique().tolist())
         selected_dept = st.selectbox("Select Department:", departments)
         
+        dept_subjects = analytics.get_department_subjects(selected_dept)
+        st.info(f"📚 **Curriculum Subjects for {selected_dept}:** {', '.join(dept_subjects)}")
+        
         dept_df = df[df['Department'] == selected_dept].sort_values(by='Student ID')
         
+        display_df = dept_df[['Student ID', 'Name', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']].copy()
+        display_df.columns = ['Student ID', 'Name', dept_subjects[0], dept_subjects[1], dept_subjects[2], dept_subjects[3], dept_subjects[4], 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
+        
         st.markdown(f"### {selected_dept} Department Students ({len(dept_df)} records)")
-        display_cols = ['Student ID', 'Name', 'Python', 'SQL', 'C++', 'OOP', 'IOT', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
-        st.dataframe(dept_df[display_cols].reset_index(drop=True), use_container_width=True)
+        st.dataframe(display_df.reset_index(drop=True), use_container_width=True)
         
         st.markdown("---")
         pdf_buffer = analytics.generate_department_pdf(selected_dept, dept_df)
@@ -198,7 +194,7 @@ else:
     elif page == "🏆 Top 5 Students":
         st.subheader("Top Performing Students")
         top_5 = analytics.get_top_students(df, 5)
-        display_cols = ['Student ID', 'Name', 'Department', 'Python', 'SQL', 'C++', 'OOP', 'IOT', 'Attendance', 'Average Marks', 'Grade', 'Status']
+        display_cols = ['Student ID', 'Name', 'Department', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Average Marks', 'Grade', 'Status']
         st.dataframe(top_5[display_cols].reset_index(drop=True), use_container_width=True)
 
     elif page == "🔍 Student Search":
@@ -210,7 +206,7 @@ else:
 
     elif page == "📋 Records Explorer & Export":
         st.subheader("All Records Explorer & CSV Export")
-        display_cols = ['Student ID', 'Name', 'Department', 'Python', 'SQL', 'C++', 'OOP', 'IOT', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
+        display_cols = ['Student ID', 'Name', 'Department', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
         st.dataframe(df[display_cols], use_container_width=True)
         csv_data = df[display_cols].to_csv(index=False).encode('utf-8')
         st.download_button("Download Complete CSV Report", data=csv_data, file_name="processed_student_report.csv", mime="text/csv")
