@@ -1,42 +1,53 @@
 # 🎓 Student Performance Analytics System (EWB Internship Project)
 
-> **A professional, browser-accessible BTech Student Performance Analytics web application built for institutional academic evaluation, department-wise student tracking, and automated PDF reporting.**
+> **A comprehensive, multi-semester BTech Student Performance Analytics web application built with Python, Streamlit, Pandas, NumPy, Plotly, and ReportLab for institutional academic tracking, department-wise evaluation, and automated PDF reporting.**
 
 ---
 
 ## 🌟 Executive Summary
 
-The **Student Performance Analytics System** is a robust end-to-end academic dashboard engineered to replace manual CLI tracking with a modern, interactive web interface. Built using **Python**, **Streamlit**, **Pandas**, **NumPy**, **Plotly**, and **ReportLab**, this platform allows educators and evaluators to upload, clean, analyze, and visualize student academic performance across multiple engineering departments instantly.
+The **Student Performance Analytics System** is an advanced academic dashboard engineered to streamline institutional grade evaluation, attendance tracking, and curriculum performance analysis. Spanning across **8 Semesters** and multiple engineering branches (**CSE, ECE, IT, MECH, AI/ML**), this system provides deep insights, robust data cleaning, student directory lookups, and instant departmental PDF report generation.
 
 ---
 
 ## 🚀 Core Capabilities & Features
 
-### 1. 📊 Interactive Overview Dashboard
-- **Real-Time Class KPIs:** Instantly computes Total Students, Class Average Score, Highest Score, Lowest Score, and Overall Pass/Fail percentages.
-- **Visual Analytics:** Interactive Plotly charts for Grade Distribution (`A+` to `F`) and Pass/Fail proportions.
-- **Department Comparisons:** Comparative bar charts illustrating average scores across various engineering branches.
+### 1. 🏠 Interactive Overview Dashboard
+- Real-time institutional KPIs: Total Records, Class Average Score, Highest Score, Lowest Score, and Overall Pass/Fail percentages.
+- Visual breakdown of Grade Distributions (`A+` to `F`) and Pass vs. Fail proportions.
 
-### 2. 📂 Department Student Directory & ID Lookup
-- **Branch-Specific Filtering:** Browse students filtered by specific departments (`CSE`, `ECE`, `IT`, `MECH`, `AI/ML`).
-- **Complete Student Records:** View exact **Student IDs**, full names, individual subject marks (`Python`, `SQL`, `C++`, `OOP`, `IOT`), attendance percentages, final averages, assigned grades, and pass/fail statuses without any guesswork.
+### 2. 📚 Multi-Semester & Department Curriculum Mapping
+- Dynamic subject mapping for **Semesters 1 through 8** across all engineering branches (e.g., Python, Data Structures, Machine Learning, Thermodynamics, VLSI Design, etc.).
+- Filter and analyze curriculum performance specifically by branch and semester.
 
-### 3. 📄 Automated Departmental PDF Report Generation
-- **On-the-Fly PDF Export:** Powered by **ReportLab**, users can generate and download official, beautifully formatted **Department PDF Reports** with a single click.
-- **Structured Layout:** Each generated PDF includes clean tabular summaries, academic metrics, and student performance statuses tailored for official documentation.
+### 3. 📂 Semester Student Directory & PDF Report Generator
+- Branch and semester-wise student lookups displaying exact Student IDs, full names, subject marks, attendance, and pass/fail statuses.
+- One-click **Department & Semester PDF Report Generation** powered by **ReportLab** for official documentation.
 
-### 4. 📈 Subject-Wise Academic Performance
-- Evaluates average, highest, lowest, and median scores across core technical subjects.
-- Features comparative bar charts and distribution box plots to identify stronger and weaker curriculum areas.
-
-### 5. 🛡️ Robust Data Cleaning & Imputation Engine
-- **Automated Validation:** Enforces strict schema checks for required columns (`Student ID`, `Name`, `Department`, `Python`, `SQL`, `C++`, `OOP`, `IOT`, `Attendance`).
-- **Smart Imputation:** Automatically handles missing values by imputing subject marks with the **median** and attendance with the **mean**.
-- **Range Enforcement:** Bounds checking (0–100 scale) with detailed data-quality logs explaining any adjustments.
-
-### 6. 🔍 Student Search & Multi-Criteria Filtering
+### 4. 🏆 Advanced Top Performers & Search
+- Filter top 5 performing students dynamically by Department and Semester.
 - Case-insensitive partial name and Student ID search engine.
-- Multi-parameter filtering by department, grade letter, and pass/fail status.
+
+### 5. 🛡️ Robust Data Validation & Imputation Engine
+- Strict schema verification for required columns (`Student ID`, `Name`, `Department`, `Semester`, `Subject 1-5`, `Attendance`).
+- Automated median imputation for missing subject marks and mean imputation for attendance, with bounds checking (0–100 scale).
+
+---
+
+## 📖 Step-by-Step User Guide (How to Use the App)
+
+Follow these simple steps to navigate and utilize the dashboard effectively:
+
+- **Step 1: Load Data**
+  - Upon opening the web application, use the sidebar to either **"Load Multi-Semester Sample Dataset"** (pre-loaded with 600 records across 8 semesters and 5 branches) or **Upload your own custom `.csv` file** matching the required schema.
+- **Step 2: Explore Overview KPIs**
+  - Navigate to **"🏠 Overview Dashboard"** to inspect institutional pass rates, class averages, and grade distributions at a glance.
+- **Step 3: Analyze Subject Performance**
+  - Go to **"📊 Subject-Wise Performance"**, select your desired Department and Semester, and view relative subject statistics, comparative bar charts, and score spreads (box plots).
+- **Step 4: Check Student Directory & Generate PDFs**
+  - Click on **"📂 Semester Student Directory & PDF"**, choose the branch and semester to view complete student records and their exact Student IDs. Click the **"📥 Download PDF Report"** button to export an official evaluation report instantly.
+- **Step 5: Search & Export Records**
+  - Use **"🔍 Student Search"** to look up individual student performance by name or ID, or visit **"📋 Records Explorer & Export"** to download complete processed datasets as CSV files.
 
 ---
 
@@ -55,10 +66,10 @@ The **Student Performance Analytics System** is a robust end-to-end academic das
 
 ```text
 student-performance-analytics-system-ewb/
-├── app.py                # Main Streamlit web application & multi-page navigation router
-├── analytics.py          # Core data cleaning, calculation rules, KPI metrics, and ReportLab PDF engine
-├── requirements.txt      # Runtime python dependencies
-├── README.md             # Project documentation and deployment manual
-├── .gitignore            # Exclusions for virtual environments and caches
+├── app.py                # Main Streamlit multi-semester web application
+├── analytics.py          # Data processing engine, curriculum mapping & ReportLab PDF generator
+├── requirements.txt      # Project runtime dependencies
+├── README.md             # Project documentation and deployment guide
+├── .gitignore            # Exclusions for virtual environments and cache
 └── sample_data/
-    └── students.csv      # Built-in 50-student sample dataset for immediate testing
+    └── students.csv      # Built-in multi-semester sample dataset (Sem 1 to 8)
