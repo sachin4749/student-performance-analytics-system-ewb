@@ -23,40 +23,41 @@ if "data_source" not in st.session_state:
 os.makedirs("sample_data", exist_ok=True)
 sample_csv_path = "sample_data/students.csv"
 
+# Generate comprehensive multi-semester sample dataset
 np.random.seed(42)
 departments = ["CSE", "ECE", "IT", "MECH", "AI/ML"]
+semesters = [f"Sem {i}" for i in range(1, 9)]
 first_names = ["Aarav", "Diya", "Rohan", "Ananya", "Kabir", "Neha", "Vikram", "Pooja", "Aditya", "Sneha", 
-               "Rahul", "Priya", "Amit", "Kavya", "Siddharth", "Meera", "Kiran", "Divya", "Arjun", "Ankita",
-               "Varun", "Shruti", "Manish", "Tanvi", "Nikhil", "Akshay", "Pallavi", "Karthik", "Swathi", "Deepak"]
-last_names = ["Sharma", "Patel", "Verma", "Iyer", "Singh", "Gupta", "Malhotra", "Nair", "Joshi", "Rao",
-              "Kulkarni", "Deshmukh", "Patil", "Reddy", "Choudhury", "Mehta", "Shah", "Bose", "Das", "Menon"]
+               "Rahul", "Priya", "Amit", "Kavya", "Siddharth", "Meera", "Kiran", "Divya", "Arjun", "Ankita"]
+last_names = ["Sharma", "Patel", "Verma", "Iyer", "Singh", "Gupta", "Malhotra", "Nair", "Joshi", "Rao"]
 
 rows = []
 sid_counter = 101
 for dept in departments:
-    for _ in range(45):
-        sid = f"S{sid_counter}"
-        sid_counter += 1
-        name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
-        rows.append({
-            'Student ID': sid, 'Name': name, 'Department': dept,
-            'Subject 1': int(np.random.randint(40, 99)),
-            'Subject 2': int(np.random.randint(38, 98)),
-            'Subject 3': int(np.random.randint(35, 96)),
-            'Subject 4': int(np.random.randint(40, 99)),
-            'Subject 5': int(np.random.randint(35, 97)),
-            'Attendance': round(float(np.random.uniform(55.0, 100.0)), 1)
-        })
+    for sem in semesters:
+        for _ in range(15):  # 15 students per branch per semester = 120 per dept, total 600 records across 8 sems
+            sid = f"S{sid_counter}"
+            sid_counter += 1
+            name = f"{np.random.choice(first_names)} {np.random.choice(last_names)}"
+            rows.append({
+                'Student ID': sid, 'Name': name, 'Department': dept, 'Semester': sem,
+                'Subject 1': int(np.random.randint(40, 99)),
+                'Subject 2': int(np.random.randint(38, 98)),
+                'Subject 3': int(np.random.randint(35, 96)),
+                'Subject 4': int(np.random.randint(40, 99)),
+                'Subject 5': int(np.random.randint(35, 97)),
+                'Attendance': round(float(np.random.uniform(55.0, 100.0)), 1)
+            })
 pd.DataFrame(rows).to_csv(sample_csv_path, index=False)
 
 st.sidebar.title("🎓 Performance Analytics")
-st.sidebar.markdown("*BTech Student Performance Dashboard*")
+st.sidebar.markdown("*BTech Multi-Semester Dashboard*")
 st.sidebar.markdown("---")
 
 st.sidebar.subheader("📁 Data Management")
 upload_option = st.sidebar.radio(
     "Choose Data Source:",
-    ("Upload CSV File", "Use Sample Dataset (225 Students / 45 per Dept)")
+    ("Upload CSV File", "Use Multi-Semester Sample Dataset")
 )
 
 def load_default_sample():
@@ -65,12 +66,12 @@ def load_default_sample():
         processed, rep = analytics.clean_and_process_data(df_sample)
         st.session_state.processed_df = processed
         st.session_state.report = rep
-        st.session_state.data_source = "Sample Dataset (225 Students)"
-        st.sidebar.success("Loaded 225 sample students successfully!")
+        st.session_state.data_source = "Multi-Semester Sample Dataset (8 Semesters)"
+        st.sidebar.success("Loaded multi-semester dataset successfully!")
     except Exception as e:
         st.sidebar.error(f"Error loading sample dataset: {e}")
 
-if upload_option == "Use Sample Dataset (225 Students / 45 per Dept)":
+if upload_option == "Use Multi-Semester Sample Dataset":
     if st.sidebar.button("Load Sample Data"):
         load_default_sample()
 else:
@@ -100,8 +101,8 @@ page = st.sidebar.radio(
     [
         "🏠 Overview Dashboard",
         "📊 Subject-Wise Performance",
-        "🏢 Department Analytics",
-        "📂 Department Student Directory",
+        "🏢 Department & Semester Analytics",
+        "📂 Semester Student Directory & PDF",
         "🏆 Top 5 Students",
         "🔍 Student Search",
         "📋 Records Explorer & Export"
@@ -113,9 +114,9 @@ report = st.session_state.report
 
 if df is None:
     st.title("🎓 Performance Analytics System")
-    st.markdown("### BTech Student Performance Analytics Dashboard")
-    st.markdown("Welcome! Please load the built-in 225-student sample dataset (45 students across CSE, ECE, IT, MECH, and AI/ML with department-specific subjects) or upload your CSV file.")
-    if st.button("🚀 Load 225 Sample Students Now", type="primary"):
+    st.markdown("### BTech Multi-Semester Academic Analytics Dashboard")
+    st.markdown("Welcome! Please load the built-in multi-semester sample dataset (covering Semesters 1 to 8 across all engineering branches) or upload your CSV file.")
+    if st.button("🚀 Load Sample Dataset Now", type="primary"):
         load_default_sample()
         st.rerun()
 else:
@@ -126,7 +127,7 @@ else:
         st.subheader("Overview Dashboard")
         kpis = analytics.get_summary_kpis(df)
         c1, c2, c3, c4, c5 = st.columns(5)
-        c1.metric("Total Students", kpis["total_students"])
+        c1.metric("Total Records", kpis["total_students"])
         c2.metric("Class Average", f"{kpis['class_average']}%")
         c3.metric("Highest Score", f"{kpis['highest_score']}%")
         c4.metric("Lowest Score", f"{kpis['lowest_score']}%")
@@ -148,101 +149,83 @@ else:
             st.plotly_chart(fig_status, use_container_width=True)
 
     elif page == "📊 Subject-Wise Performance":
-        st.subheader("📊 Subject-Wise Academic Performance")
-        st.markdown("Analyze curriculum performance across different engineering branches with their relative subjects.")
+        st.subheader("📊 Subject-Wise Performance by Semester & Branch")
         
-        all_depts = sorted(df['Department'].unique().tolist())
-        selected_subj_dept = st.selectbox("Select Department to View Subject Performance:", all_depts, key="subj_dept_select")
+        col_f1, col_f2 = st.columns(2)
+        sel_dept = col_f1.selectbox("Select Department:", sorted(df['Department'].unique().tolist()))
+        sel_sem = col_f2.selectbox("Select Semester:", [f"Sem {i}" for i in range(1, 9)])
         
-        dept_subj_names = analytics.get_department_subjects(selected_subj_dept)
-        dept_subset = df[df['Department'] == selected_subj_dept]
+        sem_subjects = analytics.get_semester_subjects(sel_dept, sel_sem)
+        subset_df = df[(df['Department'] == sel_dept) & (df['Semester'] == sel_sem)]
         
-        subj_stats = []
-        for i, subj_title in enumerate(dept_subj_names, 1):
-            col_name = f"Subject {i}"
-            if col_name in dept_subset.columns:
-                subj_data = dept_subset[col_name]
-                subj_stats.append({
-                    "Subject Name": subj_title,
-                    "Average Marks": round(subj_data.mean(), 2),
-                    "Highest Mark": int(subj_data.max()),
-                    "Lowest Mark": int(subj_data.min()),
-                    "Median Mark": round(subj_data.median(), 2)
-                })
+        st.markdown(f"### Curriculum Subjects for {sel_dept} ({sel_sem}): **{', '.join(sem_subjects)}**")
         
-        df_subj_stats = pd.DataFrame(subj_stats)
-        st.markdown(f"### {selected_subj_dept} Department Subject Statistics")
-        st.dataframe(df_subj_stats.style.highlight_max(subset=['Average Marks', 'Highest Mark'], color='lightgreen'), use_container_width=True)
-        
-        st.markdown("---")
-        col_s1, col_s2 = st.columns(2)
-        with col_s1:
-            st.markdown(f"#### {selected_subj_dept} - Comparative Subject Averages")
-            fig_subj_avg = px.bar(
-                df_subj_stats, x='Subject Name', y='Average Marks',
-                color='Subject Name', text='Average Marks',
-                title=f"Average Marks in {selected_subj_dept}"
-            )
-            fig_subj_avg.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_subj_avg, use_container_width=True)
-            
-        with col_s2:
-            st.markdown(f"#### {selected_subj_dept} - Subject Spread (Box Plot)")
-            box_records = []
-            for i, subj_title in enumerate(dept_subj_names, 1):
+        if subset_df.empty:
+            st.warning("No records found for the selected Department and Semester combination.")
+        else:
+            subj_stats = []
+            for i, subj_title in enumerate(sem_subjects, 1):
                 col_name = f"Subject {i}"
-                if col_name in dept_subset.columns:
-                    for val in dept_subset[col_name]:
-                        box_records.append({"Subject": subj_title, "Marks": val})
-            df_box = pd.DataFrame(box_records)
-            fig_box = px.box(
-                df_box, x='Subject', y='Marks', color='Subject',
-                title=f"Marks Distribution in {selected_subj_dept}"
-            )
-            fig_box.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_box, use_container_width=True)
+                if col_name in subset_df.columns:
+                    s_data = subset_df[col_name]
+                    subj_stats.append({
+                        "Subject": subj_title,
+                        "Average": round(s_data.mean(), 2),
+                        "Highest": int(s_data.max()),
+                        "Lowest": int(s_data.min()),
+                        "Median": round(s_data.median(), 2)
+                    })
+            df_stats = pd.DataFrame(subj_stats)
+            st.dataframe(df_stats.style.highlight_max(subset=['Average', 'Highest'], color='lightgreen'), use_container_width=True)
+            
+            fig_s = px.bar(df_stats, x='Subject', y='Average', color='Subject', text='Average', title=f"Average Marks - {sel_dept} ({sel_sem})")
+            fig_s.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_s, use_container_width=True)
 
-    elif page == "🏢 Department Analytics":
-        st.subheader("Department-Wise Summary")
-        dept_grouped = df.groupby('Department').agg(
-            Total_Students=('Student ID', 'count'),
-            Average_Score=('Average Marks', 'mean'),
-            Pass_Count=('Status', lambda x: (x == 'Pass').sum())
+    elif page == "🏢 Department & Semester Analytics":
+        st.subheader("Department & Semester-Wise Summary")
+        summary_group = df.groupby(['Department', 'Semester']).agg(
+            Students=('Student ID', 'count'),
+            Avg_Score=('Average Marks', 'mean'),
+            Pass_Rate=('Status', lambda x: round((x == 'Pass').sum() / len(x) * 100, 2))
         ).reset_index()
-        dept_grouped['Pass_Percentage'] = (dept_grouped['Pass_Count'] / dept_grouped['Total_Students'] * 100).round(2)
-        dept_grouped['Average_Score'] = dept_grouped['Average_Score'].round(2)
-        st.dataframe(dept_grouped, use_container_width=True)
+        summary_group['Avg_Score'] = summary_group['Avg_Score'].round(2)
+        st.dataframe(summary_group, use_container_width=True)
 
-    elif page == "📂 Department Student Directory":
-        st.subheader("Department Student Directory & PDF Reports")
-        departments = sorted(df['Department'].unique().tolist())
-        selected_dept = st.selectbox("Select Department:", departments)
+    elif page == "📂 Semester Student Directory & PDF":
+        st.subheader("Semester Student Directory & PDF Report Generator")
         
-        dept_subjects = analytics.get_department_subjects(selected_dept)
-        st.info(f"📚 **Curriculum Subjects for {selected_dept}:** {', '.join(dept_subjects)}")
+        c1, c2 = st.columns(2)
+        dir_dept = c1.selectbox("Select Department for Directory:", sorted(df['Department'].unique().tolist()), key="dir_dept")
+        dir_sem = c2.selectbox("Select Semester:", [f"Sem {i}" for i in range(1, 9)], key="dir_sem")
         
-        dept_df = df[df['Department'] == selected_dept].sort_values(by='Student ID')
+        sem_subjects = analytics.get_semester_subjects(dir_dept, dir_sem)
+        dir_subset = df[(df['Department'] == dir_dept) & (df['Semester'] == dir_sem)].sort_values(by='Student ID')
         
-        display_df = dept_df[['Student ID', 'Name', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']].copy()
-        display_df.columns = ['Student ID', 'Name', dept_subjects[0], dept_subjects[1], dept_subjects[2], dept_subjects[3], dept_subjects[4], 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
+        st.info(f"📚 **{dir_dept} - {dir_sem} Subjects:** {', '.join(sem_subjects)}")
         
-        st.markdown(f"### {selected_dept} Department Students ({len(dept_df)} records)")
-        st.dataframe(display_df.reset_index(drop=True), use_container_width=True)
-        
-        st.markdown("---")
-        pdf_buffer = analytics.generate_department_pdf(selected_dept, dept_df)
-        st.download_button(
-            label=f"📥 Download {selected_dept} Department PDF Report",
-            data=pdf_buffer,
-            file_name=f"{selected_dept}_department_report.pdf",
-            mime="application/pdf",
-            type="primary"
-        )
+        if dir_subset.empty:
+            st.warning("No student records available for this Department and Semester combination.")
+        else:
+            display_df = dir_subset[['Student ID', 'Name', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']].copy()
+            display_df.columns = ['Student ID', 'Name', sem_subjects[0], sem_subjects[1], sem_subjects[2], sem_subjects[3], sem_subjects[4], 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
+            
+            st.dataframe(display_df.reset_index(drop=True), use_container_width=True)
+            
+            st.markdown("---")
+            pdf_buf = analytics.generate_department_semester_pdf(dir_dept, dir_sem, dir_subset)
+            st.download_button(
+                label=f"📥 Download {dir_dept} {dir_sem} PDF Report",
+                data=pdf_buf,
+                file_name=f"{dir_dept}_{dir_sem}_report.pdf",
+                mime="application/pdf",
+                type="primary"
+            )
 
     elif page == "🏆 Top 5 Students":
-        st.subheader("Top Performing Students")
+        st.subheader("Top Performing Students Across Semesters")
         top_5 = analytics.get_top_students(df, 5)
-        display_cols = ['Student ID', 'Name', 'Department', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Average Marks', 'Grade', 'Status']
+        display_cols = ['Student ID', 'Name', 'Department', 'Semester', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Average Marks', 'Grade', 'Status']
         st.dataframe(top_5[display_cols].reset_index(drop=True), use_container_width=True)
 
     elif page == "🔍 Student Search":
@@ -254,7 +237,7 @@ else:
 
     elif page == "📋 Records Explorer & Export":
         st.subheader("All Records Explorer & CSV Export")
-        display_cols = ['Student ID', 'Name', 'Department', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
+        display_cols = ['Student ID', 'Name', 'Department', 'Semester', 'Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5', 'Attendance', 'Total Marks', 'Average Marks', 'Grade', 'Status']
         st.dataframe(df[display_cols], use_container_width=True)
         csv_data = df[display_cols].to_csv(index=False).encode('utf-8')
-        st.download_button("Download Complete CSV Report", data=csv_data, file_name="processed_student_report.csv", mime="text/csv")
+        st.download_button("Download Complete CSV Report", data=csv_data, file_name="complete_multisem_student_report.csv", mime="text/csv")
