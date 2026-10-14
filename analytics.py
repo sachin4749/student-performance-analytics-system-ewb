@@ -1,5 +1,10 @@
 import pandas as pd
 import numpy as np
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 
 REQUIRED_COLUMNS = ['Student ID', 'Name', 'Department', 'Python', 'SQL', 'C++', 'OOP', 'IOT', 'Attendance']
 SUBJECTS = ['Python', 'SQL', 'C++', 'OOP', 'IOT']
@@ -10,16 +15,7 @@ def validate_columns(df):
     return missing
 
 def clean_and_process_data(df):
-    """
-    Cleans the student dataset, handles missing values, validates ranges,
-    calculates totals, averages, grades, and pass/fail statuses.
-    Returns:
-        processed_df: pd.DataFrame with all calculated fields
-        report: dict containing data quality metrics and logs
-    """
-    # Create a copy to avoid modifying original
     df = df.copy()
-    
     report = {
         "missing_columns": [],
         "imputation_log": [],
@@ -28,27 +24,21 @@ def clean_and_process_data(df):
         "data_quality_notes": []
     }
     
-    # 1. Validate required columns
     missing_cols = validate_columns(df)
     if missing_cols:
         report["missing_columns"] = missing_cols
         raise ValueError(f"Missing required columns in dataset: {missing_cols}")
 
-    # 2. Convert subject marks and attendance to numeric, coercing errors
     for col in SUBJECTS + ['Attendance']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # 3. Handle missing values & imputation
     imputation_log = []
-    
-    # Subject marks imputation (Median)
     for subj in SUBJECTS:
         if subj in df.columns:
             missing_count = df[subj].isnull().sum()
             if missing_count > 0:
                 if df[subj].dropna().empty:
-                    # All values are missing
                     df[subj] = df[subj].fillna(0)
                     imputation_log.append(f"Subject '{subj}' has no valid numeric values; imputed with 0.")
                 else:
@@ -56,7 +46,6 @@ def clean_and_process_data(df):
                     df[subj] = df[subj].fillna(median_val)
                     imputation_log.append(f"Imputed {missing_count} missing value(s) in '{subj}' with median ({median_val:.2f}).")
 
-    # Attendance imputation (Mean)
     if 'Attendance' in df.columns:
         att_missing = df['Attendance'].isnull().sum()
         if att_missing > 0:
@@ -70,54 +59,43 @@ def clean_and_process_data(df):
 
     report["imputation_log"] = imputation_log
 
-    # 4. Range Validation (0-100 for marks and attendance)
     invalid_ranges_log = []
     for subj in SUBJECTS:
         if subj in df.columns:
             invalid_mask = (df[subj] < 0) | (df[subj] > 100)
             invalid_count = invalid_mask.sum()
             if invalid_count > 0:
-                invalid_ranges_log.append(f"Found {invalid_count} out-of-range value(s) in '{subj}' (outside 0-100). Clipped to valid bounds.")
+                invalid_ranges_log.append(f"Found {invalid_count} out-of-range value(s) in '{subj}' (outside 0-100). Clipped.")
                 df[subj] = df[subj].clip(0, 100)
 
     if 'Attendance' in df.columns:
         att_invalid = (df['Attendance'] < 0) | (df['Attendance'] > 100)
         att_inv_count = att_invalid.sum()
         if att_inv_count > 0:
-            invalid_ranges_log.append(f"Found {att_inv_count} out-of-range value(s) in 'Attendance' (outside 0-100%). Clipped to valid bounds.")
+            invalid_ranges_log.append(f"Found {att_inv_count} out-of-range value(s) in 'Attendance'. Clipped.")
             df['Attendance'] = df['Attendance'].clip(0, 100)
 
     report["invalid_ranges_log"] = invalid_ranges_log
 
-    # 5. Handle missing Student ID, Name, Department
     for meta_col in ['Student ID', 'Name', 'Department']:
         if meta_col in df.columns:
             df[meta_col] = df[meta_col].fillna("Unknown").astype(str).str.strip()
             df[meta_col] = df[meta_col].replace('', 'Unknown')
 
-    # 6. Calculations: Total Marks, Max Possible, Average Marks
     df['Total Marks'] = df[SUBJECTS].sum(axis=1)
     df['Max Possible'] = len(SUBJECTS) * 100
     df['Average Marks'] = df['Total Marks'] / len(SUBJECTS)
 
-    # 7. Grade Assignment
     def assign_grade(avg):
-        if avg >= 85:
-            return 'A+'
-        elif avg >= 75:
-            return 'A'
-        elif avg >= 65:
-            return 'B+'
-        elif avg >= 55:
-            return 'B'
-        elif avg >= 45:
-            return 'C'
-        else:
-            return 'F'
+        if avg >= 85: return 'A+'
+        elif avg >= 75: return 'A'
+        elif avg >= 65: return 'B+'
+        elif avg >= 55: return 'B'
+        elif avg >= 45: return 'C'
+        else: return 'F'
 
     df['Grade'] = df['Average Marks'].apply(assign_grade)
 
-    # 8. Pass/Fail Status (Average >= 45 AND Attendance >= 60)
     def determine_status(row):
         if row['Average Marks'] >= 45 and row['Attendance'] >= 60:
             return 'Pass'
@@ -125,11 +103,9 @@ def clean_and_process_data(df):
             return 'Fail'
 
     df['Status'] = df.apply(determine_status, axis=1)
-
     return df, report
 
 def get_summary_kpis(df):
-    """Calculate KPI metrics for the overview dashboard."""
     total_students = len(df)
     if total_students == 0:
         return {
@@ -144,7 +120,6 @@ def get_summary_kpis(df):
     pass_count = (df['Status'] == 'Pass').sum()
     fail_count = (df['Status'] == 'Fail').sum()
     pass_percentage = (pass_count / total_students) * 100
-    fail_percentage = (fail_count / total_students) * 100
     
     return {
         "total_students": total_students,
@@ -154,13 +129,73 @@ def get_summary_kpis(df):
         "pass_count": int(pass_count),
         "pass_percentage": round(pass_percentage, 2),
         "fail_count": int(fail_count),
-        "fail_percentage": round(fail_percentage, 2)
+        "fail_percentage": round((fail_count / total_students) * 100, 2)
     }
 
 def get_top_students(df, n=5):
-    """Return top N performing students sorted by Average Marks."""
-    if df.empty:
-        return pd.DataFrame()
-    # Sort by Average Marks descending, and Student ID/Name for stable tie-breaking
-    sorted_df = df.sort_values(by=['Average Marks', 'Student ID'], ascending=[False, True])
-    return sorted_df.head(n)
+    if df.empty: return pd.DataFrame()
+    return df.sort_values(by=['Average Marks', 'Student ID'], ascending=[False, True]).head(n)
+
+def generate_department_pdf(department_name, dept_df):
+    """Generates a professional PDF report for a specific department."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1f77b4'),
+        spaceAfter=6
+    )
+    subtitle_style = ParagraphStyle(
+        'SubTitleStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=colors.HexColor('#555555'),
+        spaceAfter=15
+    )
+    
+    elements.append(Paragraph(f"Performance Analytics Report: {department_name} Department", title_style))
+    elements.append(Paragraph(f"Total Students: {len(dept_df)} | Generated by BTech Performance Analytics System", subtitle_style))
+    elements.append(Spacer(1, 10))
+    
+    # Table Data
+    table_data = [['ID', 'Name', 'Python', 'SQL', 'C++', 'OOP', 'IOT', 'Att%', 'Avg%', 'Grade', 'Status']]
+    
+    for _, row in dept_df.iterrows():
+        table_data.append([
+            str(row['Student ID']),
+            str(row['Name']),
+            str(row['Python']),
+            str(row['SQL']),
+            str(row['C++']),
+            str(row['OOP']),
+            str(row['IOT']),
+            f"{row['Attendance']}%",
+            f"{round(row['Average Marks'], 1)}%",
+            str(row['Grade']),
+            str(row['Status'])
+        ])
+        
+    t = Table(table_data, colWidths=[55, 110, 42, 42, 42, 42, 42, 45, 45, 42, 50])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1f77b4')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 9),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f9f9f9')),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dddddd')),
+        ('FONTSIZE', (0,1), (-1,-1), 8),
+        ('TOPPADDING', (0,1), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+    ]))
+    
+    elements.append(t)
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
